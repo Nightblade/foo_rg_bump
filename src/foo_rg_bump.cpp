@@ -88,6 +88,7 @@ static void adjust_gain(double delta)
         filter,
         core_api::get_main_window(),
         metadb_io_v2::op_flag_delay_ui_update,
+        0,
         nullptr
     );
 }
