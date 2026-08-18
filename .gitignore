@@ -1,0 +1,9 @@
+Win32/
+x64/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+.vs/
+*.fb2k-component
+dist/
