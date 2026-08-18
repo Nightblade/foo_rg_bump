@@ -37,26 +37,14 @@ public:
     // Returns true if we actually modified the info (tells fb2k to write the file).
     bool apply_filter(metadb_handle_ptr /*handle*/, t_filestats /*stats*/, file_info & info) override
     {
-        // Read current value; default to 0.0 dB if absent or unparseable.
-        double current = 0.0;
-        const char * existing = info.meta_get(k_tag_name, 0);
-        if (existing && *existing)
-        {
-            // The tag format is e.g. "-3.20 dB" or just "-3.20".
-            // strtod stops at the first non-numeric char, so both forms work.
-            char * end = nullptr;
-            double parsed = std::strtod(existing, &end);
-            if (end != existing)
-                current = parsed;
-        }
+        replaygain_info rg = info.get_replaygain();
 
-        double adjusted = current + m_delta;
+        float current = rg.m_track_gain;
+        if (current == replaygain_info::gain_invalid)
+            current = 0.0f;
 
-        // Format as "+N.NN dB" or "-N.NN dB", matching the conventional RG format.
-        char buf[32];
-        std::snprintf(buf, sizeof(buf), "%+.2f dB", adjusted);
-
-        info.meta_set(k_tag_name, buf);
+        rg.m_track_gain = current + (float)m_delta;
+        info.set_replaygain(rg);
         return true;
     }
 
