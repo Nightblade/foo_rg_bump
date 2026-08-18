@@ -1,10 +1,5 @@
 #include "stdafx.h"
 #include "guids.h"
-#include <SDK/foobar2000.h>
-#include <SDK/playback_control.h>
-#include <SDK/metadb_io.h>
-#include <SDK/mainmenu.h>
-#include <helpers/helpers.h>
 
 #include <cstdio>
 #include <cstdlib>
