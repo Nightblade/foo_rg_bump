@@ -1,4 +1,4 @@
 [submodule "foobar2000-sdk"]
 	path = foobar2000-sdk
-	url = https://github.com/marc2k3/foobar2000-sdk.git
-	branch = main
+	url = https://github.com/pnck/foobar2000_sdk.git
+	branch = 2024-12-03
