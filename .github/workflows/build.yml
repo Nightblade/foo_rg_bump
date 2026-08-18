@@ -17,6 +17,23 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install WTL headers
+        shell: pwsh
+        run: |
+          $nuget = "$env:TEMP\nuget.exe"
+          Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile $nuget -UseBasicParsing
+          & $nuget install WTL -OutputDirectory "$env:TEMP\wtl_pkg" -NonInteractive | Out-Null
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath  = & $vswhere -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath
+          $msvcDir = Get-ChildItem "$vsPath\VC\Tools\MSVC" -Directory |
+            Sort-Object Name -Descending |
+            Select-Object -First 1
+          $atlmfcInclude = "$($msvcDir.FullName)\atlmfc\include"
+          $wtlPkg = (Get-ChildItem "$env:TEMP\wtl_pkg" -Directory | Select-Object -First 1).FullName
+          Copy-Item "$wtlPkg\lib\native\include\*" -Destination $atlmfcInclude -Force
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
