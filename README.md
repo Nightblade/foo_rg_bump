@@ -1,17 +1,26 @@
 # foo_rg_bump
 
-A foobar2000 component that adjusts the `REPLAYGAIN_TRACK_GAIN` tag of the currently playing track by ±0.5 dB, triggered by user-assigned keyboard shortcuts.
+A foobar2000 component that adjusts ReplayGain tags of the currently playing track or focused playlist item, triggered by user-assigned keyboard shortcuts.
 
 ## Usage
 
 1. Install the component (drag `.fb2k-component` onto foobar2000, or use Preferences > Components > Install).
 2. Open **Preferences > Keyboard Shortcuts**.
 3. Click **Add New** and search for:
-   - `RG Adjust / Track Gain +0.5 dB`
-   - `RG Adjust / Track Gain -0.5 dB`
+   - `RG Adjust / Track Gain +delta dB`
+   - `RG Adjust / Track Gain -delta dB`
 4. Assign your preferred keys and click Apply.
 
-The commands operate on the **currently playing track**. If nothing is playing the keypress is a no-op. The tag is written to the physical file on disk.
+The commands operate on the **currently playing track**, or the **focused playlist item** if nothing is playing. The tag is written to the physical file on disk.
+
+## Configuration
+
+Settings are changed via **Preferences > Advanced > Tools > RG Bump**.
+
+- **Step size** -- adjustment in tenths of a dB (e.g. 5 = 0.5 dB). Default: 5. Range: 1--200.
+- **Target tag** -- 0 = track gain only, 1 = album gain only, 2 = both. Default: 0.
+
+Settings are saved persistently in foobar2000's configuration.
 
 ## Building
 
@@ -35,9 +44,13 @@ Download the `.fb2k-component` from the Actions run's artifacts to install.
 ## Notes
 
 - foobar2000 2.0+ is x64. The x86 build is for legacy installs.
-- The tag format written is `+N.NN dB` / `-N.NN dB`, matching the ReplayGain convention.
-- If the tag is absent when you press the key, the component treats the current value as `0.00 dB` and writes `+0.50 dB` or `-0.50 dB`.
-- Writing tags to the currently playing file works in practice but fb2k may briefly delay the write until playback of that file ends in some edge cases.
+- If a ReplayGain tag is absent, the component treats the current value as 0.00 dB.
+
+## Credits
+
+- Workflow and project structure inspired by [PEERSOFTdev/foo_musical_key](https://github.com/PEERSOFTdev/foo_musical_key).
+- CI build approach informed by [jecassis/foo_vis_milk2](https://github.com/jecassis/foo_vis_milk2).
+- Developed with assistance from Claude (Sonnet 4.6 Medium)
 
 ## License
 
