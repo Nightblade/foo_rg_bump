@@ -109,7 +109,7 @@ static void adjust_gain(double delta)
     metadb_handle_list tracks;
     tracks.add_item(track);
 
-    int target = (int)g_advconfig_target.get_state();
+    int target = (int)(uint64_t)g_advconfig_target;
     auto filter = fb2k::service_new<rg_gain_filter>(delta, target);
 
     metadb_io_v2::get()->update_info_async(
@@ -169,7 +169,7 @@ public:
 
     void execute(t_uint32 index, service_ptr_t<service_base> /*callback*/) override
     {
-        double delta = g_advconfig_delta.get_state() / 10.0;
+        double delta = (double)(uint64_t)g_advconfig_delta / 10.0;
         switch (index)
         {
         case cmd_gain_up:   adjust_gain(+delta); break;
