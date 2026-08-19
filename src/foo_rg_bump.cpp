@@ -1,76 +1,117 @@
 #include "stdafx.h"
 #include "guids.h"
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-
 DECLARE_COMPONENT_VERSION(
     "ReplayGain Track Gain Adjuster",
     "1.0",
-    "Adjusts REPLAYGAIN_TRACK_GAIN of the currently playing track by +/- 0.5 dB.\n"
+    "Copyright (c) 2026 Nighty. All rights reserved.\n\n"
+    "Adjusts REPLAYGAIN_TRACK_GAIN and/or REPLAYGAIN_ALBUM_GAIN of the currently playing track, "
+    "or the focused playlist item if nothing is playing, by a configurable step size.\n\n"
     "Assign keyboard shortcuts via Preferences > Keyboard Shortcuts.\n\n"
     "Commands:\n"
-    "  RG Adjust / Track Gain +0.5 dB\n"
-    "  RG Adjust / Track Gain -0.5 dB"
+    "  RG Adjust / Track Gain +delta dB\n"
+    "  RG Adjust / Track Gain -delta dB\n\n"
+    "Configure step size and target tag via Preferences > Advanced > Tools > RG Bump.\n\n"
+    "Built with foobar2000 SDK 20241203\n"
+    "on " __DATE__ " " __TIME__ "."
 );
 
 VALIDATE_COMPONENT_FILENAME("foo_rg_bump.dll");
 
 // ---------------------------------------------------------------------------
-// Tag name we operate on
+// Advanced Preferences
+//
+// Preferences > Advanced > Tools > RG Bump
+//
+// Step size is stored as integer tenths of a dB (e.g. 5 = 0.5 dB).
+// Target: 0 = track, 1 = album, 2 = both.
 // ---------------------------------------------------------------------------
-static const char k_tag_name[] = "REPLAYGAIN_TRACK_GAIN";
-static const double k_delta    = 0.5;
+static advconfig_branch_factory g_advconfig_branch(
+    "RG Bump", guid_advconfig_branch, advconfig_branch::guid_branch_tools, 0
+);
+
+static advconfig_integer_factory g_advconfig_delta(
+    "Step size (tenths of a dB, e.g. 5 = 0.5 dB)",
+    guid_advconfig_delta, guid_advconfig_branch,
+    0,   // priority
+    5,   // default: 0.5 dB
+    1,   // minimum: 0.1 dB
+    200  // maximum: 20.0 dB
+);
+
+static advconfig_integer_factory g_advconfig_target(
+    "Target tag (0 = track, 1 = album, 2 = both)",
+    guid_advconfig_target, guid_advconfig_branch,
+    1,  // priority
+    0,  // default: track
+    0,  // minimum
+    2   // maximum
+);
 
 // ---------------------------------------------------------------------------
 // file_info_filter implementation
-//
-// update_info_async calls our filter once per track with a mutable file_info.
-// We read the current gain value, apply the delta, and write it back.
 // ---------------------------------------------------------------------------
 class rg_gain_filter : public file_info_filter
 {
 public:
-    explicit rg_gain_filter(double delta) : m_delta(delta) {}
+    rg_gain_filter(double delta, int target) : m_delta(delta), m_target(target) {}
 
-    // Returns true if we actually modified the info (tells fb2k to write the file).
     bool apply_filter(metadb_handle_ptr /*handle*/, t_filestats /*stats*/, file_info & info) override
     {
         replaygain_info rg = info.get_replaygain();
 
-        float current = rg.m_track_gain;
-        if (current == replaygain_info::gain_invalid)
-            current = 0.0f;
+        if (m_target == 0 || m_target == 2) // track or both
+        {
+            float current = rg.m_track_gain;
+            if (current == replaygain_info::gain_invalid)
+                current = 0.0f;
+            rg.m_track_gain = current + (float)m_delta;
+        }
 
-        rg.m_track_gain = current + (float)m_delta;
+        if (m_target == 1 || m_target == 2) // album or both
+        {
+            float current = rg.m_album_gain;
+            if (current == replaygain_info::gain_invalid)
+                current = 0.0f;
+            rg.m_album_gain = current + (float)m_delta;
+        }
+
         info.set_replaygain(rg);
         return true;
     }
 
 private:
     double m_delta;
+    int    m_target;
 };
 
 // ---------------------------------------------------------------------------
-// Helper: get now-playing handle and schedule a tag update
+// Helper: resolve the target track and schedule a tag update
 // ---------------------------------------------------------------------------
 static void adjust_gain(double delta)
 {
-    // playback_control methods must be called from the main thread only.
-    // mainmenu_commands::execute() is guaranteed to run on the main thread.
-    auto pc = playback_control::get();
     metadb_handle_ptr track;
+
+    auto pc = playback_control::get();
     if (!pc->get_now_playing(track))
-        return; // nothing playing, silently do nothing
+    {
+        // Nothing playing -- use the focused playlist item instead
+        auto plm = playlist_manager::get();
+        t_size playlist = plm->get_active_playlist();
+        if (playlist == pfc::infinite_size) return;
+        t_size focus = plm->playlist_get_focus_item(playlist);
+        if (focus == pfc::infinite_size) return;
+        plm->playlist_get_item_handle(track, playlist, focus);
+    }
+
+    if (!track.is_valid()) return;
 
     metadb_handle_list tracks;
     tracks.add_item(track);
 
-    auto filter = fb2k::service_new<rg_gain_filter>(delta);
+    int target = (int)g_advconfig_target.get_state();
+    auto filter = fb2k::service_new<rg_gain_filter>(delta, target);
 
-    // update_info_async writes tags to the physical file asynchronously.
-    // The second parameter is an optional progress dialog parent (NULL = none).
     metadb_io_v2::get()->update_info_async(
         tracks,
         filter,
@@ -82,9 +123,6 @@ static void adjust_gain(double delta)
 
 // ---------------------------------------------------------------------------
 // mainmenu_commands registration
-//
-// Registering commands here makes them appear in Preferences > Keyboard
-// Shortcuts so the user can bind any key they like to each command.
 // ---------------------------------------------------------------------------
 class rg_mainmenu_commands : public mainmenu_commands
 {
@@ -107,8 +145,8 @@ public:
     {
         switch (index)
         {
-        case cmd_gain_up:   out = "Track Gain +0.5 dB"; break;
-        case cmd_gain_down: out = "Track Gain -0.5 dB"; break;
+        case cmd_gain_up:   out = "Track Gain +delta dB"; break;
+        case cmd_gain_down: out = "Track Gain -delta dB"; break;
         default: uBugCheck();
         }
     }
@@ -118,10 +156,10 @@ public:
         switch (index)
         {
         case cmd_gain_up:
-            out = "Increase REPLAYGAIN_TRACK_GAIN of the now-playing track by 0.5 dB";
+            out = "Increase ReplayGain value(s) of the current track by the configured step size";
             return true;
         case cmd_gain_down:
-            out = "Decrease REPLAYGAIN_TRACK_GAIN of the now-playing track by 0.5 dB";
+            out = "Decrease ReplayGain value(s) of the current track by the configured step size";
             return true;
         default: uBugCheck();
         }
@@ -131,10 +169,11 @@ public:
 
     void execute(t_uint32 index, service_ptr_t<service_base> /*callback*/) override
     {
+        double delta = g_advconfig_delta.get_state() / 10.0;
         switch (index)
         {
-        case cmd_gain_up:   adjust_gain(+k_delta); break;
-        case cmd_gain_down: adjust_gain(-k_delta); break;
+        case cmd_gain_up:   adjust_gain(+delta); break;
+        case cmd_gain_down: adjust_gain(-delta); break;
         default: uBugCheck();
         }
     }
@@ -142,14 +181,10 @@ public:
 
 // ---------------------------------------------------------------------------
 // mainmenu_group registration
-//
-// Creates the "RG Adjust" group under the View menu.
-// Commands in this group appear in the keyboard shortcuts list as
-// "RG Adjust / Track Gain +0.5 dB" etc.
 // ---------------------------------------------------------------------------
 static mainmenu_group_popup_factory g_mainmenu_group(
     guid_mainmenu_group,
-    mainmenu_groups::view,          // parent: View menu
+    mainmenu_groups::view,
     mainmenu_commands::sort_priority_dontcare,
     "RG Adjust"
 );
