@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install WTL headers
+        shell: pwsh
+        run: |
+          $nuget = "$env:TEMP\nuget.exe"
+          Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile $nuget -UseBasicParsing
+          & $nuget install WTL -OutputDirectory "$env:TEMP\wtl_pkg" -NonInteractive | Out-Null
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath  = & $vswhere -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath
+          $msvcDir = Get-ChildItem "$vsPath\VC\Tools\MSVC" -Directory |
+            Sort-Object Name -Descending |
+            Select-Object -First 1
+          $atlmfcInclude = "$($msvcDir.FullName)\atlmfc\include"
+          $wtlPkg = (Get-ChildItem "$env:TEMP\wtl_pkg" -Directory | Select-Object -First 1).FullName
+          Copy-Item "$wtlPkg\lib\native\include\*" -Destination $atlmfcInclude -Force
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Release x64
+        shell: pwsh
+        run: |
+          msbuild foo_rg_bump.sln `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            /p:PlatformToolset=v143 `
+            /m /v:m /nologo
+
+      - name: Build Release x86
+        shell: pwsh
+        run: |
+          msbuild foo_rg_bump.sln `
+            /p:Configuration=Release `
+            /p:Platform=Win32 `
+            /p:PlatformToolset=v143 `
+            /m /v:m /nologo
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF -like "refs/tags/v*") { $env:GITHUB_REF_NAME.Substring(1) } else { "manual" }
+          "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Package .fb2k-component
+        shell: pwsh
+        run: |
+          $dist = "dist"
+          New-Item -ItemType Directory -Force $dist | Out-Null
+          New-Item -ItemType Directory -Force "$dist\x64" | Out-Null
+          Copy-Item "Win32\Release\foo_rg_bump.dll" "$dist\foo_rg_bump.dll"
+          Copy-Item "x64\Release\foo_rg_bump.dll"   "$dist\x64\foo_rg_bump.dll"
+          Compress-Archive -Path "$dist\*" -DestinationPath "dist\foo_rg_bump-${{ steps.version.outputs.value }}.fb2k-component" -Force
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: foo_rg_bump-package
+          path: dist\*.fb2k-component
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist\*.fb2k-component
+          generate_release_notes: true
