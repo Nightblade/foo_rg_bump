@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "guids.h"
+#include "version.h"
 
 DECLARE_COMPONENT_VERSION(
     "ReplayGain Track Gain Adjuster",
-    "1.0",
-    "Copyright (c) 2026 Nighty. All rights reserved.\n\n"
+    COMPONENT_VERSION,
+    COMPONENT_FILE_NAME " " COMPONENT_VERSION "\n"
+    "Copyright (c) " COMPONENT_COPYRIGHT ". All rights reserved.\n\n"
     "Adjusts REPLAYGAIN_TRACK_GAIN and/or REPLAYGAIN_ALBUM_GAIN of the currently playing track, "
     "or the focused playlist item if nothing is playing, by a configurable step size.\n\n"
     "Assign keyboard shortcuts via Preferences > Keyboard Shortcuts.\n\n"
@@ -60,20 +62,20 @@ public:
     {
         replaygain_info rg = info.get_replaygain();
 
-        if (m_target == 0 || m_target == 2) // track or both
+        if (m_target == 0 || m_target == 2)
         {
             float current = rg.m_track_gain;
             if (current == replaygain_info::gain_invalid)
                 current = 0.0f;
-            rg.m_track_gain = current + (float)m_delta;
+            rg.m_track_gain = pfc::clip_t<float>(current + (float)m_delta, -51.0f, +51.0f);
         }
 
-        if (m_target == 1 || m_target == 2) // album or both
+        if (m_target == 1 || m_target == 2)
         {
             float current = rg.m_album_gain;
             if (current == replaygain_info::gain_invalid)
                 current = 0.0f;
-            rg.m_album_gain = current + (float)m_delta;
+            rg.m_album_gain = pfc::clip_t<float>(current + (float)m_delta, -51.0f, +51.0f);
         }
 
         info.set_replaygain(rg);

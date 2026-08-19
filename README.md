@@ -17,8 +17,8 @@ The commands operate on the **currently playing track**, or the **focused playli
 
 Settings are changed via **Preferences > Advanced > Tools > RG Bump**.
 
-- **Step size** -- adjustment in tenths of a dB (e.g. 5 = 0.5 dB). Default: 5. Range: 1--200.
-- **Target tag** -- 0 = track gain only, 1 = album gain only, 2 = both. Default: 0.
+- **Step size:** adjustment in tenths of a dB (e.g. 5 = 0.5 dB). Default: 5. Range: 1 to 200.
+- **Target tag:** 0 = track gain only, 1 = album gain only, 2 = both. Default: 0.
 
 Settings are saved persistently in foobar2000's configuration.
 
@@ -27,7 +27,7 @@ Settings are saved persistently in foobar2000's configuration.
 The SDK is included as a git submodule. Clone with:
 
 ```
-git clone --recurse-submodules https://github.com/YOUR_USERNAME/foo_rg_bump.git
+git clone --recurse-submodules https://github.com/Nightblade/foo_rg_bump.git
 ```
 
 Then open `foo_rg_bump.sln` in Visual Studio 2022 and build the Release|x64 configuration. The resulting DLL is at `x64\Release\foo_rg_bump.dll`.
@@ -40,6 +40,10 @@ Every push triggers a GitHub Actions build (`.github/workflows/build.yml`) that 
 - `foo_rg_bump-component` artifact (`.fb2k-component` package containing both)
 
 Download the `.fb2k-component` from the Actions run's artifacts to install.
+
+## Download
+
+The latest release is available on the [GitHub Releases page](https://github.com/Nightblade/foo_rg_bump/releases/latest). Download `foo_rg_bump-<version>.fb2k-component` and drag it onto foobar2000 to install.
 
 ## Notes
 
