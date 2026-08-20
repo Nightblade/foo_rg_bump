@@ -50,8 +50,9 @@ The latest release is available on the [GitHub Releases page](https://github.com
 - foobar2000 2.0+ is x64. The x86 build is for legacy installs.
 - If a ReplayGain tag is absent, the component treats the current value as 0.00 dB.
 
-## Credits
+## Acknowledgements / Credits
 
+- Peter Pawlowski for the [foobar2000](https://www.foobar2000.org/) audio player. ![foobar2000](https://www.foobar2000.org/button-small.png)
 - Workflow and project structure inspired by [PEERSOFTdev/foo_musical_key](https://github.com/PEERSOFTdev/foo_musical_key).
 - CI build approach informed by [jecassis/foo_vis_milk2](https://github.com/jecassis/foo_vis_milk2).
 - Developed with assistance from Claude (Sonnet 4.6 Medium)
