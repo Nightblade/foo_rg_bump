@@ -74,6 +74,12 @@ jobs:
           Copy-Item "x64\Release\foo_rg_bump.dll"   "$dist\x64\foo_rg_bump.dll"
           Compress-Archive -Path "$dist\*" -DestinationPath "dist\foo_rg_bump-${{ steps.version.outputs.value }}.fb2k-component" -Force
 
+      - name: Collect PDB files
+        shell: pwsh
+        run: |
+          Copy-Item "Win32\Release\foo_rg_bump.pdb" "dist\foo_rg_bump-x86-${{ steps.version.outputs.value }}.pdb"
+          Copy-Item "x64\Release\foo_rg_bump.pdb"   "dist\foo_rg_bump-x64-${{ steps.version.outputs.value }}.pdb"
+
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
@@ -84,5 +90,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist\*.fb2k-component
+          files: |
+            dist\*.fb2k-component
+            dist\*.pdb
           generate_release_notes: true
+
