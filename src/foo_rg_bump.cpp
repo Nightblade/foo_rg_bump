@@ -111,7 +111,7 @@ static void adjust_gain(double delta)
 
     tracks.sort_remove_duplicates_t([](const metadb_handle_ptr & a, const metadb_handle_ptr & b)
     {
-        return metadb::path_compare_metadb_handle(a, b);
+        return metadb::path_compare_metadb_handle(a, b) < 0;
     });
 
     int target = (int)(uint64_t)g_advconfig_target;
