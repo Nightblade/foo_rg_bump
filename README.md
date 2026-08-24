@@ -11,7 +11,7 @@ A foobar2000 component that adjusts ReplayGain tags of the currently playing tra
    - `RG Adjust / Track Gain -delta dB`
 4. Assign your preferred keys and click Apply.
 
-The commands operate on the **currently playing track**, or the **focused playlist item** if nothing is playing. The tag is written to the physical file on disk.
+The component operates on all **selected playlist items** and the **currently playing track** if any.
 
 ## Configuration
 

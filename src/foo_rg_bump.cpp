@@ -7,8 +7,8 @@ DECLARE_COMPONENT_VERSION(
     COMPONENT_VERSION,
     COMPONENT_FILE_NAME " " COMPONENT_VERSION "\n"
     "Copyright (c) " COMPONENT_COPYRIGHT ". All rights reserved.\n\n"
-    "Adjusts REPLAYGAIN_TRACK_GAIN and/or REPLAYGAIN_ALBUM_GAIN of the currently playing track, "
-    "or the focused playlist item if nothing is playing, by a configurable step size.\n\n"
+    "Adjusts REPLAYGAIN_TRACK_GAIN and/or REPLAYGAIN_ALBUM_GAIN of all selected playlist items "
+    "and the currently playing track, by a configurable step size.\n\n"
     "Assign keyboard shortcuts via Preferences > Keyboard Shortcuts.\n\n"
     "Commands:\n"
     "  RG Adjust / Track Gain +delta dB\n"
@@ -92,24 +92,27 @@ private:
 // ---------------------------------------------------------------------------
 static void adjust_gain(double delta)
 {
-    metadb_handle_ptr track;
+    metadb_handle_list tracks;
 
-    auto pc = playback_control::get();
-    if (!pc->get_now_playing(track))
+    metadb_handle_ptr playing;
+    if (playback_control::get()->get_now_playing(playing))
     {
-        // Nothing playing -- use the focused playlist item instead
-        auto plm = playlist_manager::get();
-        t_size playlist = plm->get_active_playlist();
-        if (playlist == pfc::infinite_size) return;
-        t_size focus = plm->playlist_get_focus_item(playlist);
-        if (focus == pfc::infinite_size) return;
-        plm->playlist_get_item_handle(track, playlist, focus);
+        tracks.add_item(playing);
     }
 
-    if (!track.is_valid()) return;
+    auto plm = playlist_manager::get();
+    t_size playlist = plm->get_active_playlist();
+    if (playlist != pfc::infinite_size)
+    {
+        plm->playlist_get_selected_items(playlist, tracks);
+    }
 
-    metadb_handle_list tracks;
-    tracks.add_item(track);
+    if (tracks.get_count() == 0) return;
+
+    tracks.sort_remove_duplicates_t([](const metadb_handle_ptr & a, const metadb_handle_ptr & b)
+    {
+        return metadb::path_compare_metadb_handle(a, b);
+    });
 
     int target = (int)(uint64_t)g_advconfig_target;
     auto filter = fb2k::service_new<rg_gain_filter>(delta, target);
@@ -158,10 +161,10 @@ public:
         switch (index)
         {
         case cmd_gain_up:
-            out = "Increase ReplayGain value(s) of the current track by the configured step size";
+            out = "Increase ReplayGain value(s) of selected and playing tracks by the configured step size";
             return true;
         case cmd_gain_down:
-            out = "Decrease ReplayGain value(s) of the current track by the configured step size";
+            out = "Decrease ReplayGain value(s) of selected and playing tracks by the configured step size";
             return true;
         default: uBugCheck();
         }

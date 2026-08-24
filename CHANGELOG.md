@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2] - 2026-08-24
+
+### Changed
+
+- The component now operates on all selected playlist items plus the currently playing track, instead of a single track at a time. Duplicates are handled automatically.
+
 ## [1.1] - 2026-08-19
 
 ### Added
