@@ -100,11 +100,13 @@ static void adjust_gain(double delta)
         tracks.add_item(playing);
     }
 
+    metadb_handle_list selected;
     auto plm = playlist_manager::get();
     t_size playlist = plm->get_active_playlist();
     if (playlist != pfc::infinite_size)
     {
-        plm->playlist_get_selected_items(playlist, tracks);
+        plm->playlist_get_selected_items(playlist, selected);
+        tracks.add_items(selected);
     }
 
     if (tracks.get_count() == 0) return;
