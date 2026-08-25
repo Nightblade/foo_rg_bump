@@ -15,7 +15,7 @@ DECLARE_COMPONENT_VERSION(
     "  RG Adjust / Track Gain -delta dB\n\n"
     "Configure step size and target tag via Preferences > Advanced > Tools > RG Bump.\n\n"
     "Built with foobar2000 SDK 20241203\n"
-    "on " __DATE__ " " __TIME__ "."
+    "on " __DATE__ " " __TIME__ " UTC."
 );
 
 VALIDATE_COMPONENT_FILENAME("foo_rg_bump.dll");
@@ -94,27 +94,23 @@ static void adjust_gain(double delta)
 {
     metadb_handle_list tracks;
 
-    metadb_handle_ptr playing;
-    if (playback_control::get()->get_now_playing(playing))
-    {
-        tracks.add_item(playing);
-    }
-
-    metadb_handle_list selected;
     auto plm = playlist_manager::get();
     t_size playlist = plm->get_active_playlist();
     if (playlist != pfc::infinite_size)
     {
-        plm->playlist_get_selected_items(playlist, selected);
-        tracks.add_items(selected);
+        plm->playlist_get_selected_items(playlist, tracks);
+    }
+
+    if (tracks.get_count() == 0)
+    {
+        metadb_handle_ptr playing;
+        if (playback_control::get()->get_now_playing(playing))
+        {
+            tracks.add_item(playing);
+        }
     }
 
     if (tracks.get_count() == 0) return;
-
-    tracks.sort_remove_duplicates_t([](const metadb_handle_ptr & a, const metadb_handle_ptr & b)
-    {
-        return metadb::path_compare_metadb_handle(a, b) < 0;
-    });
 
     int target = (int)(uint64_t)g_advconfig_target;
     auto filter = fb2k::service_new<rg_gain_filter>(delta, target);
