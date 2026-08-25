@@ -8,7 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- The component now operates on all selected playlist items plus the currently playing track, instead of a single track at a time. Duplicates are handled automatically.
+- Component now operates on all selected playlist items, or the currently playing track if nothing is selected.
 
 ## [1.1] - 2026-08-19
 

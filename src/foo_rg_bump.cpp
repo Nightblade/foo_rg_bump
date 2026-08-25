@@ -7,8 +7,8 @@ DECLARE_COMPONENT_VERSION(
     COMPONENT_VERSION,
     COMPONENT_FILE_NAME " " COMPONENT_VERSION "\n"
     "Copyright (c) " COMPONENT_COPYRIGHT ". All rights reserved.\n\n"
-    "Adjusts REPLAYGAIN_TRACK_GAIN and/or REPLAYGAIN_ALBUM_GAIN of all selected playlist items "
-    "and the currently playing track, by a configurable step size.\n\n"
+    "Adjusts REPLAYGAIN_TRACK_GAIN and/or REPLAYGAIN_ALBUM_GAIN of all selected playlist items, "
+    "or the currently playing track if nothing is selected, by a configurable step size.\n\n"
     "Assign keyboard shortcuts via Preferences > Keyboard Shortcuts.\n\n"
     "Commands:\n"
     "  RG Adjust / Track Gain +delta dB\n"
