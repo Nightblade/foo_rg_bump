@@ -52,11 +52,12 @@ The latest release is available on the [GitHub Releases page](https://github.com
 
 ## Acknowledgements / Credits
 
-- Peter Pawlowski for the [foobar2000](https://www.foobar2000.org/) audio player. ![foobar2000](https://www.foobar2000.org/button-small.png)
-- Workflow and project structure inspired by [PEERSOFTdev/foo_musical_key](https://github.com/PEERSOFTdev/foo_musical_key).
-- CI build approach informed by [jecassis/foo_vis_milk2](https://github.com/jecassis/foo_vis_milk2).
-- Developed with assistance from Claude (Sonnet 4.6 Medium)
+- Peter Pawlowski for [foobar2000](https://www.foobar2000.org/) [![foobar2000](https://www.foobar2000.org/button-small.png)](https://www.foobar2000.org)
+- Peter Pawlowski for [foobar2000 SDK](https://www.foobar2000.org/SDK). (Used under its [BSD-style license](https://github.com/pnck/foobar2000_sdk/tree/e4a269fd355f3066a7dbeb50fc65a11307103103); pfc and libPPUI used under the zlib license.)
+- Workflow and project structure inspired by [PEERSOFTdev/foo_musical_key](https://github.com/PEERSOFTdev/foo_musical_key) (GPL-3.0).
+- CI build approach informed by [jecassis/foo_vis_milk2](https://github.com/jecassis/foo_vis_milk2) (MPL-2.0).
+- Developed with assistance from Claude (Sonnet 4.6 Medium).
 
 ## License
 
-BSD 3-Clause (same as the foobar2000 SDK).
+See [LICENSE.txt](LICENSE.txt)
